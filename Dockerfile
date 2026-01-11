@@ -14,6 +14,9 @@ COPY package.json pnpm-lock.yaml* ./
 # Installer les dépendances
 RUN pnpm install --frozen-lockfile
 
+# Invalider le cache en touchant un fichier (force la mise à jour)
+RUN echo "Build timestamp: $(date)" > /tmp/build.timestamp
+
 # Copier le reste des fichiers
 COPY . .
 
