@@ -2,12 +2,13 @@
 
 import { type HTMLAttributes, useCallback, useState } from 'react';
 import { Track } from 'livekit-client';
-import { useChat, useRemoteParticipants } from '@livekit/components-react';
-import { ChatTextIcon, PhoneDisconnectIcon } from '@phosphor-icons/react/dist/ssr';
+import { useChat, useRemoteParticipants, type ReceivedMessage } from '@livekit/components-react';
+import { ChatTextIcon, PhoneDisconnectIcon, CopyIcon, CheckIcon } from '@phosphor-icons/react/dist/ssr';
+import { toast } from 'sonner';
 import { TrackToggle } from '@/components/livekit/agent-control-bar/track-toggle';
 import { Button } from '@/components/livekit/button';
 import { Toggle } from '@/components/livekit/toggle';
-import { cn } from '@/lib/utils';
+import { cn, formatMessagesAsText, copyToClipboard } from '@/lib/utils';
 import { ChatInput } from './chat-input';
 import { UseInputControlsProps, useInputControls } from './hooks/use-input-controls';
 import { usePublishPermissions } from './hooks/use-publish-permissions';
@@ -26,6 +27,7 @@ export interface AgentControlBarProps extends UseInputControlsProps {
   isConnected?: boolean;
   onChatOpenChange?: (open: boolean) => void;
   onDeviceError?: (error: { source: Track.Source; error: Error }) => void;
+  messages?: ReceivedMessage[];
 }
 
 /**
@@ -39,11 +41,13 @@ export function AgentControlBar({
   onDisconnect,
   onDeviceError,
   onChatOpenChange,
+  messages = [],
   ...props
 }: AgentControlBarProps & HTMLAttributes<HTMLDivElement>) {
   const { send } = useChat();
   const participants = useRemoteParticipants();
   const [chatOpen, setChatOpen] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
   const publishPermissions = usePublishPermissions();
   const {
     micTrackRef,
@@ -67,6 +71,27 @@ export function AgentControlBar({
     },
     [onChatOpenChange, setChatOpen]
   );
+
+  const handleCopyTranscript = useCallback(async () => {
+    if (messages.length === 0) {
+      toast.error('Aucune transcription à copier');
+      return;
+    }
+
+    try {
+      const formattedText = formatMessagesAsText(messages);
+      await copyToClipboard(formattedText);
+      setCopySuccess(true);
+      toast.success('Transcription copiée dans le presse-papiers !');
+      
+      // Reset success state after 2 seconds
+      setTimeout(() => {
+        setCopySuccess(false);
+      }, 2000);
+    } catch (error) {
+      toast.error(`Erreur lors de la copie: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, [messages]);
 
   const visibleControls = {
     leave: controls?.leave ?? true,
@@ -151,6 +176,23 @@ export function AgentControlBar({
           >
             <ChatTextIcon weight="bold" />
           </Toggle>
+
+          {/* Copy Transcript */}
+          {messages.length > 0 && (
+            <Button
+              size="icon"
+              variant="secondary"
+              aria-label="Copier la transcription"
+              onClick={handleCopyTranscript}
+              title="Copier la transcription dans le presse-papiers"
+            >
+              {copySuccess ? (
+                <CheckIcon weight="bold" />
+              ) : (
+                <CopyIcon weight="bold" />
+              )}
+            </Button>
+          )}
         </div>
 
         {/* Disconnect */}

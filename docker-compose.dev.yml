@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: agent-starter-react-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      # Variables LiveKit
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - LIVEKIT_URL=${LIVEKIT_URL}
+      - AGENT_NAME=${AGENT_NAME:-}
+      # Variables n8N
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL:-}
+    volumes:
+      # Montage du code source pour le hot-reload
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    restart: unless-stopped
+    command: pnpm dev
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

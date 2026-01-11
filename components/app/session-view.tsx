@@ -7,6 +7,7 @@ import type { AppConfig } from '@/app-config';
 import { ChatTranscript } from '@/components/app/chat-transcript';
 import { PreConnectMessage } from '@/components/app/preconnect-message';
 import { TileLayout } from '@/components/app/tile-layout';
+import { TranscriptWidget } from '@/components/app/transcript-widget';
 import {
   AgentControlBar,
   type ControlBarControls,
@@ -88,6 +89,9 @@ export const SessionView = ({
 
   return (
     <section className="bg-background relative z-10 h-full w-full overflow-hidden" {...props}>
+      {/* Transcript Widget */}
+      <TranscriptWidget messages={messages} />
+      
       {/* Chat Transcript */}
       <div
         className={cn(
@@ -123,6 +127,7 @@ export const SessionView = ({
             isConnected={session.isConnected}
             onDisconnect={session.end}
             onChatOpenChange={setChatOpen}
+            messages={messages}
           />
         </div>
       </MotionBottom>

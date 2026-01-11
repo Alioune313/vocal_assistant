@@ -1,0 +1,19 @@
+# Dockerfile pour le développement
+FROM node:22-alpine
+
+# Installer pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copier les fichiers de dépendances
+COPY package.json pnpm-lock.yaml* ./
+
+# Installer les dépendances
+RUN pnpm install
+
+# Exposer le port
+EXPOSE 3000
+
+# Commande par défaut (peut être surchargée dans docker-compose)
+CMD ["pnpm", "dev"]

@@ -1,0 +1,446 @@
+{
+  "name": "Transcription Voice Agent - Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "transcription-webhook",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Nouvelle Transcription",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "webhookId": "transcription-webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "timestamp",
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "transcription",
+              "name": "transcription",
+              "value": "={{ $json.transcription }}",
+              "type": "string"
+            },
+            {
+              "id": "sessionId",
+              "name": "sessionId",
+              "value": "={{ $json.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "participant",
+              "name": "participant",
+              "value": "={{ $json.participant }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "extract-data",
+      "name": "Extraire les Données",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.participant }}",
+              "rightValue": "Agent",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-agent",
+      "name": "Filtrer Messages Agent",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Formater la transcription pour Word/Outlook\nconst transcription = $input.item.json.transcription;\nconst timestamp = new Date($input.item.json.timestamp).toLocaleString('fr-FR');\nconst participant = $input.item.json.participant;\n\nconst formattedText = `\n=== TRANSCRIPTION ===\nDate: ${timestamp}\nParticipant: ${participant}\n\n${transcription}\n\n---\n`;\n\nreturn {\n  json: {\n    formattedText: formattedText,\n    original: transcription,\n    timestamp: timestamp,\n    participant: participant\n  }\n};"
+      },
+      "id": "format-text",
+      "name": "Formater pour Word/Outlook",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "message",
+        "operation": "send",
+        "fromEmail": "={{ $env.EMAIL_FROM }}",
+        "toEmail": "={{ $env.EMAIL_TO }}",
+        "subject": "Nouvelle Transcription - {{ $json.timestamp }}",
+        "emailType": "html",
+        "message": "=Bonjour,<br><br>Une nouvelle transcription a été reçue :<br><br><pre style='white-space: pre-wrap; font-family: monospace;'>{{ $json.formattedText }}</pre><br><br>Cordialement,<br>Système de Transcription",
+        "options": {
+          "attachments": []
+        }
+      },
+      "id": "send-email",
+      "name": "Envoyer par Email (Outlook)",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 1.2,
+      "position": [1050, 200],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "outlook-credentials",
+          "name": "Microsoft Outlook OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "resource": "document",
+        "fileName": "=Transcription_{{ $json.timestamp.replace(/[^0-9]/g, '_') }}.docx",
+        "fileContent": "={{ $json.formattedText }}",
+        "options": {
+          "parents": ["={{ $env.GOOGLE_DRIVE_FOLDER_ID }}"]
+        }
+      },
+      "id": "save-google-drive",
+      "name": "Sauvegarder Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3.2,
+      "position": [1050, 400],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "google-drive-credentials",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "resource": "database",
+        "databaseId": "={{ $env.NOTION_DATABASE_ID }}",
+        "properties": {
+          "mappingMode": "defineBelow",
+          "property": [
+            {
+              "key": "Title",
+              "type": "title",
+              "value": "=Transcription {{ $json.timestamp }}"
+            },
+            {
+              "key": "Content",
+              "type": "richText",
+              "value": "={{ $json.transcription }}"
+            },
+            {
+              "key": "Date",
+              "type": "date",
+              "value": "={{ $json.timestamp }}"
+            }
+          ]
+        }
+      },
+      "id": "save-notion",
+      "name": "Sauvegarder Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.1,
+      "position": [1050, 600],
+      "credentials": {
+        "notionApi": {
+          "id": "notion-credentials",
+          "name": "Notion API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Analyser la transcription pour extraire des insights\nconst transcription = $input.item.json.transcription.toLowerCase();\n\n// Détecter les mots-clés importants\nconst keywords = {\n  action: ['faire', 'créer', 'envoyer', 'appeler', 'réserver'],\n  question: ['comment', 'pourquoi', 'quand', 'où', 'qui'],\n  urgence: ['urgent', 'important', 'immédiatement', 'asap'],\n  date: ['aujourd\\'hui', 'demain', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']\n};\n\nconst detectedKeywords = {};\nfor (const [category, words] of Object.entries(keywords)) {\n  detectedKeywords[category] = words.filter(word => transcription.includes(word));\n}\n\n// Compter les mots\nconst wordCount = transcription.split(' ').length;\n\n// Détecter le sentiment (simple)\nlet sentiment = 'neutre';\nconst positiveWords = ['bien', 'bon', 'excellent', 'parfait', 'merci'];\nconst negativeWords = ['problème', 'erreur', 'non', 'pas', 'difficile'];\n\nconst positiveCount = positiveWords.filter(word => transcription.includes(word)).length;\nconst negativeCount = negativeWords.filter(word => transcription.includes(word)).length;\n\nif (positiveCount > negativeCount) sentiment = 'positif';\nelse if (negativeCount > positiveCount) sentiment = 'négatif';\n\nreturn {\n  json: {\n    ...$input.item.json,\n    analysis: {\n      wordCount,\n      detectedKeywords,\n      sentiment,\n      hasAction: detectedKeywords.action.length > 0,\n      hasQuestion: detectedKeywords.question.length > 0,\n      isUrgent: detectedKeywords.urgency.length > 0\n    }\n  }\n};"
+      },
+      "id": "analyze-transcription",
+      "name": "Analyser la Transcription",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.analysis.isUrgent }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "check-urgent",
+      "name": "Vérifier Urgence",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [1050, 400]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "message",
+        "operation": "send",
+        "fromEmail": "={{ $env.EMAIL_FROM }}",
+        "toEmail": "={{ $env.EMAIL_URGENT }}",
+        "subject": "🚨 URGENT - Transcription Requiert Attention",
+        "emailType": "html",
+        "message": "=<h2>🚨 Transcription Urgente</h2><p><strong>Date:</strong> {{ $json.timestamp }}</p><p><strong>Contenu:</strong></p><pre style='white-space: pre-wrap; font-family: monospace;'>{{ $json.transcription }}</pre><p><strong>Analyse:</strong> {{ JSON.stringify($json.analysis) }}</p>",
+        "options": {}
+      },
+      "id": "send-urgent-email",
+      "name": "Email Urgent",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 1.2,
+      "position": [1250, 300],
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "outlook-credentials",
+          "name": "Microsoft Outlook OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "resource": "task",
+        "title": "=Action: {{ $json.transcription.substring(0, 50) }}...",
+        "description": "={{ $json.transcription }}\n\nDate: {{ $json.timestamp }}\nSentiment: {{ $json.analysis.sentiment }}",
+        "status": "open",
+        "options": {}
+      },
+      "id": "create-task",
+      "name": "Créer Tâche (si Action)",
+      "type": "n8n-nodes-base.ifttt",
+      "typeVersion": 1,
+      "position": [1250, 500],
+      "credentials": {
+        "iftttApi": {
+          "id": "ifttt-credentials",
+          "name": "IFTTT API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"success\", \"message\": \"Transcription traitée avec succès\", \"timestamp\": $json.timestamp } }}"
+      },
+      "id": "respond-webhook",
+      "name": "Répondre au Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1450, 400]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "sheetId": "={{ $env.GOOGLE_SHEETS_ID }}",
+        "range": "A:D",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $json.timestamp }}",
+            "participant": "={{ $json.participant }}",
+            "transcription": "={{ $json.transcription }}",
+            "sentiment": "={{ $json.analysis.sentiment }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "log-google-sheets",
+      "name": "Logger dans Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [850, 600],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "google-sheets-credentials",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Nouvelle Transcription": {
+      "main": [
+        [
+          {
+            "node": "Extraire les Données",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraire les Données": {
+      "main": [
+        [
+          {
+            "node": "Filtrer Messages Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrer Messages Agent": {
+      "main": [
+        [
+          {
+            "node": "Formater pour Word/Outlook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Analyser la Transcription",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formater pour Word/Outlook": {
+      "main": [
+        [
+          {
+            "node": "Envoyer par Email (Outlook)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sauvegarder Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyser la Transcription": {
+      "main": [
+        [
+          {
+            "node": "Vérifier Urgence",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Logger dans Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vérifier Urgence": {
+      "main": [
+        [
+          {
+            "node": "Email Urgent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Créer Tâche (si Action)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envoyer par Email (Outlook)": {
+      "main": [
+        [
+          {
+            "node": "Répondre au Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sauvegarder Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Répondre au Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sauvegarder Notion": {
+      "main": [
+        [
+          {
+            "node": "Répondre au Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Logger dans Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Sauvegarder Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2025-01-13T12:00:00.000Z",
+  "versionId": "1"
+}

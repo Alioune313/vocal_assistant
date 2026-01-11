@@ -2,6 +2,7 @@ import { cache } from 'react';
 import { type ClassValue, clsx } from 'clsx';
 import { TokenSource } from 'livekit-client';
 import { twMerge } from 'tailwind-merge';
+import { type ReceivedMessage } from '@livekit/components-react';
 import { APP_CONFIG_DEFAULTS } from '@/app-config';
 import type { AppConfig } from '@/app-config';
 
@@ -103,7 +104,33 @@ export function getStyles(appConfig: AppConfig) {
  */
 export function getSandboxTokenSource(appConfig: AppConfig) {
   return TokenSource.custom(async () => {
-    const url = new URL(process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT!, window.location.origin);
+    const endpoint = process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT;
+    if (!endpoint || endpoint.trim() === '') {
+      throw new Error('NEXT_PUBLIC_CONN_DETAILS_ENDPOINT is not defined or is empty');
+    }
+    
+    // Validate that we're in a browser environment
+    if (typeof window === 'undefined' || !window.location) {
+      throw new Error('window.location is not available');
+    }
+    
+    // Try to construct the URL with proper error handling
+    let url: URL;
+    try {
+      // If endpoint is already a full URL, use it directly
+      if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+        url = new URL(endpoint);
+      } else {
+        // Otherwise, use window.location.origin as base
+        const baseUrl = window.location.origin;
+        if (!baseUrl || baseUrl === 'null' || baseUrl === 'undefined') {
+          throw new Error('window.location.origin is invalid');
+        }
+        url = new URL(endpoint, baseUrl);
+      }
+    } catch (error) {
+      throw new Error(`Invalid URL: ${endpoint} (base: ${window.location.origin}). ${error instanceof Error ? error.message : String(error)}`);
+    }
     const sandboxId = appConfig.sandboxId ?? '';
     const roomConfig = appConfig.agentName
       ? {
@@ -128,4 +155,83 @@ export function getSandboxTokenSource(appConfig: AppConfig) {
       throw new Error('Error fetching connection details!');
     }
   });
+}
+
+/**
+ * Format messages into a readable text transcript
+ * @param messages - Array of received messages
+ * @returns Formatted text string ready to be copied
+ */
+export function formatMessagesAsText(messages: ReceivedMessage[]): string {
+  if (messages.length === 0) {
+    return 'Aucune transcription disponible.';
+  }
+
+  const locale = navigator?.language ?? 'fr-FR';
+  const lines: string[] = [];
+  
+  lines.push('=== TRANSCRIPTION DE LA SESSION ===\n');
+  lines.push(`Date: ${new Date().toLocaleDateString(locale, { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  })}`);
+  lines.push(`Heure de début: ${new Date(messages[0]?.timestamp ?? Date.now()).toLocaleTimeString(locale)}`);
+  lines.push(`Heure de fin: ${new Date(messages[messages.length - 1]?.timestamp ?? Date.now()).toLocaleTimeString(locale)}`);
+  lines.push('\n--- Messages ---\n');
+
+  messages.forEach((msg) => {
+    const time = new Date(msg.timestamp);
+    const timeStr = time.toLocaleTimeString(locale, { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    
+    const sender = msg.from?.isLocal 
+      ? 'Vous' 
+      : (msg.from?.name || 'Agent');
+    
+    const messageText = msg.message || '';
+    
+    lines.push(`[${timeStr}] ${sender}:`);
+    lines.push(messageText);
+    lines.push(''); // Ligne vide entre les messages
+  });
+
+  lines.push('\n=== Fin de la transcription ===');
+  
+  return lines.join('\n');
+}
+
+/**
+ * Copy text to clipboard
+ * @param text - Text to copy
+ * @returns Promise that resolves when copy is successful
+ */
+export async function copyToClipboard(text: string): Promise<void> {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      // Fallback pour les navigateurs plus anciens
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        document.execCommand('copy');
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
+  } catch (error) {
+    throw new Error(`Impossible de copier dans le presse-papiers: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
