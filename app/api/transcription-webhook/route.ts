@@ -14,20 +14,14 @@ export async function POST(req: Request) {
 
     // Vérifier que N8N_WEBHOOK_URL est configuré
     const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
-    
+
     if (!n8nWebhookUrl) {
       console.error('N8N_WEBHOOK_URL not configured');
-      return NextResponse.json(
-        { error: 'N8N webhook URL not configured' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'N8N webhook URL not configured' }, { status: 500 });
     }
 
     if (!messages || messages.length === 0) {
-      return NextResponse.json(
-        { error: 'No messages provided' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No messages provided' }, { status: 400 });
     }
 
     // Formater les messages pour n8N
@@ -68,9 +62,10 @@ export async function POST(req: Request) {
       total: transcriptions.length,
       successful,
       failed,
-      message: failed > 0 
-        ? `${successful} transcriptions envoyées, ${failed} échecs`
-        : 'Toutes les transcriptions ont été envoyées avec succès',
+      message:
+        failed > 0
+          ? `${successful} transcriptions envoyées, ${failed} échecs`
+          : 'Toutes les transcriptions ont été envoyées avec succès',
     });
   } catch (error) {
     console.error('Error sending to n8N:', error);

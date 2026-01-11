@@ -1,13 +1,19 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { type ReceivedMessage } from '@livekit/components-react';
-import { CopyIcon, CheckIcon, XIcon, ArrowsInSimple, ArrowsOutSimple, PaperPlaneTiltIcon } from '@phosphor-icons/react/dist/ssr';
+import { useCallback, useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { toast } from 'sonner';
+import { type ReceivedMessage } from '@livekit/components-react';
+import {
+  ArrowsInSimple,
+  ArrowsOutSimple,
+  CheckIcon,
+  CopyIcon,
+  PaperPlaneTiltIcon,
+  XIcon,
+} from '@phosphor-icons/react/dist/ssr';
 import { Button } from '@/components/livekit/button';
-import { formatMessagesAsText, copyToClipboard } from '@/lib/utils';
-import { cn } from '@/lib/utils';
+import { cn, copyToClipboard, formatMessagesAsText } from '@/lib/utils';
 
 interface TranscriptWidgetProps {
   messages: ReceivedMessage[];
@@ -32,7 +38,7 @@ export function TranscriptWidget({ messages }: TranscriptWidgetProps) {
       await copyToClipboard(formattedText);
       setCopySuccess(true);
       toast.success('Transcription copiée !');
-      
+
       setTimeout(() => {
         setCopySuccess(false);
       }, 2000);
@@ -65,7 +71,7 @@ export function TranscriptWidget({ messages }: TranscriptWidgetProps) {
       if (response.ok) {
         toast.success(`Transcription envoyée à n8N ! (${data.successful}/${data.total})`);
       } else {
-        throw new Error(data.message || 'Erreur lors de l\'envoi');
+        throw new Error(data.message || "Erreur lors de l'envoi");
       }
     } catch (error) {
       toast.error(`Erreur n8N: ${error instanceof Error ? error.message : String(error)}`);
@@ -88,12 +94,12 @@ export function TranscriptWidget({ messages }: TranscriptWidgetProps) {
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
         onClick={() => setIsVisible(true)}
-        className="fixed top-4 right-4 z-[100] size-12 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 flex items-center justify-center"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 fixed top-4 right-4 z-[100] flex size-12 items-center justify-center rounded-full shadow-lg"
         aria-label="Afficher le widget de transcription"
       >
         <CopyIcon weight="bold" className="size-5" />
         {messages.length > 0 && (
-          <span className="absolute -top-1 -right-1 size-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center">
+          <span className="bg-destructive text-destructive-foreground absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full text-xs">
             {messages.length}
           </span>
         )}
@@ -108,17 +114,17 @@ export function TranscriptWidget({ messages }: TranscriptWidgetProps) {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -20, scale: 0.9 }}
         className={cn(
-          'fixed top-4 right-4 z-[100] bg-background border border-input rounded-lg shadow-xl',
+          'bg-background border-input fixed top-4 right-4 z-[100] rounded-lg border shadow-xl',
           isMinimized ? 'w-64' : 'w-80'
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-3 border-b border-input">
+        <div className="border-input flex items-center justify-between border-b p-3">
           <div className="flex items-center gap-2">
             <CopyIcon weight="bold" className="size-4" />
             <span className="text-sm font-semibold">Transcription</span>
             {messages.length > 0 && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 ({messages.length} message{messages.length > 1 ? 's' : ''})
               </span>
             )}
@@ -151,11 +157,11 @@ export function TranscriptWidget({ messages }: TranscriptWidgetProps) {
 
         {/* Content */}
         {!isMinimized && (
-          <div className="p-3 space-y-2">
-            <div className="text-xs text-muted-foreground">
+          <div className="space-y-2 p-3">
+            <div className="text-muted-foreground text-xs">
               Cliquez pour copier toutes les transcriptions dans le presse-papiers
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Button
                 onClick={handleCopyTranscript}
@@ -186,7 +192,7 @@ export function TranscriptWidget({ messages }: TranscriptWidgetProps) {
             </div>
 
             {/* Auto-copy toggle */}
-            <label className="flex items-center gap-2 text-xs cursor-pointer">
+            <label className="flex cursor-pointer items-center gap-2 text-xs">
               <input
                 type="checkbox"
                 checked={autoCopy}
@@ -198,9 +204,7 @@ export function TranscriptWidget({ messages }: TranscriptWidgetProps) {
                 }}
                 className="size-3 rounded"
               />
-              <span className="text-muted-foreground">
-                Copie automatique des nouveaux messages
-              </span>
+              <span className="text-muted-foreground">Copie automatique des nouveaux messages</span>
             </label>
           </div>
         )}

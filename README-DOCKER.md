@@ -118,7 +118,7 @@ Dans `docker-compose.yml`, modifiez :
 
 ```yaml
 ports:
-  - "8080:3000"  # Port externe:Port interne
+  - '8080:3000' # Port externe:Port interne
 ```
 
 ### Ajouter des volumes
@@ -219,6 +219,7 @@ Le Dockerfile est compatible avec Kubernetes. Vous pouvez créer un deployment K
 ## 🆘 Support
 
 Pour plus d'aide :
+
 - [Documentation Docker](https://docs.docker.com/)
 - [Documentation Docker Compose](https://docs.docker.com/compose/)
 - [Next.js Docker](https://nextjs.org/docs/deployment#docker-image)

@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     // Envoyer vers n8N webhook
     const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
-    
+
     if (!n8nWebhookUrl) {
       return NextResponse.json({ error: 'N8N webhook URL not configured' }, { status: 500 });
     }
@@ -87,7 +87,7 @@ const handleSendToN8N = useCallback(async () => {
     if (response.ok) {
       toast.success('Transcription envoyée à n8N !');
     } else {
-      throw new Error('Erreur lors de l\'envoi');
+      throw new Error("Erreur lors de l'envoi");
     }
   } catch (error) {
     toast.error(`Erreur: ${error instanceof Error ? error.message : String(error)}`);
@@ -107,22 +107,26 @@ const handleSendToN8N = useCallback(async () => {
 ### 2. Configurer les Credentials
 
 #### Microsoft Outlook
+
 1. Allez dans "Credentials" > "Add Credential"
 2. Sélectionnez "Microsoft Outlook OAuth2 API"
 3. Suivez le processus d'authentification OAuth2
 4. Configurez les permissions nécessaires
 
 #### Google Drive
+
 1. Créez un credential "Google Drive OAuth2 API"
 2. Authentifiez-vous avec votre compte Google
 3. Notez l'ID du dossier de destination
 
 #### Google Sheets
+
 1. Créez un credential "Google Sheets OAuth2 API"
 2. Créez une nouvelle feuille de calcul
 3. Notez l'ID de la feuille
 
 #### Notion (optionnel)
+
 1. Créez une intégration Notion
 2. Obtenez votre token API
 3. Créez une base de données pour les transcriptions
@@ -174,6 +178,7 @@ Vous pouvez aussi déclencher manuellement le webhook depuis votre application o
 ### Ajouter d'autres destinations
 
 Vous pouvez facilement ajouter d'autres nœuds dans n8N pour :
+
 - Envoyer vers Slack
 - Créer des tickets dans Jira
 - Sauvegarder dans Airtable
@@ -183,6 +188,7 @@ Vous pouvez facilement ajouter d'autres nœuds dans n8N pour :
 ### Modifier l'analyse
 
 Le nœud "Analyser la Transcription" peut être modifié pour :
+
 - Détecter des entités nommées
 - Extraire des dates/heures
 - Classifier par catégorie
@@ -192,16 +198,19 @@ Le nœud "Analyser la Transcription" peut être modifié pour :
 ## Exemples de Cas d'Usage
 
 ### 1. Support Client Automatisé
+
 - Transcription → Email au support
 - Analyse → Création de ticket si urgent
 - Sauvegarde → Base de données CRM
 
 ### 2. Prise de Notes de Réunion
+
 - Transcription → Google Drive (format Word)
 - Analyse → Extraction des actions
 - Notification → Email avec résumé
 
 ### 3. Documentation Automatique
+
 - Transcription → Notion
 - Formatage → Template personnalisé
 - Archivage → Google Drive organisé par date
@@ -209,16 +218,19 @@ Le nœud "Analyser la Transcription" peut être modifié pour :
 ## Dépannage
 
 ### Le webhook ne reçoit pas les données
+
 - Vérifiez que l'URL est correcte
 - Vérifiez que le workflow est activé
 - Vérifiez les logs n8N
 
 ### Les emails ne sont pas envoyés
+
 - Vérifiez les credentials Outlook
 - Vérifiez les permissions OAuth2
 - Vérifiez les variables d'environnement
 
 ### Google Drive ne fonctionne pas
+
 - Vérifiez l'ID du dossier
 - Vérifiez les permissions du dossier
 - Vérifiez les credentials Google
@@ -226,5 +238,6 @@ Le nœud "Analyser la Transcription" peut être modifié pour :
 ## Support
 
 Pour plus d'aide, consultez :
+
 - [Documentation n8N](https://docs.n8n.io/)
 - [API n8N](https://docs.n8n.io/api/)

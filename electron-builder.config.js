@@ -7,10 +7,7 @@ module.exports = {
     output: 'dist',
     buildResources: 'build',
   },
-  files: [
-    'electron/**/*',
-    'package.json',
-  ],
+  files: ['electron/**/*', 'package.json'],
   extraFiles: [
     {
       from: '.next/standalone',

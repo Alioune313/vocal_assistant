@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: agent-starter-react-dev
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       - NODE_ENV=development
       - PORT=3000

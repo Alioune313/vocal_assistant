@@ -91,7 +91,7 @@ export const SessionView = ({
     <section className="bg-background relative z-10 h-full w-full overflow-hidden" {...props}>
       {/* Transcript Widget */}
       <TranscriptWidget messages={messages} />
-      
+
       {/* Chat Transcript */}
       <div
         className={cn(

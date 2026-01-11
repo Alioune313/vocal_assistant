@@ -6,7 +6,7 @@ Copiez et collez ce prompt dans Claude pour créer un workflow n8N personnalisé
 
 ## PROMPT À DONNER À CLAUDE
 
-```
+````
 Je veux créer un workflow n8N pour automatiser le traitement des transcriptions d'une application de transcription vocale en temps réel.
 
 ## Contexte de l'Application
@@ -30,7 +30,7 @@ L'application envoie des transcriptions via un webhook POST avec ce format JSON 
   "messageId": "msg_abc123",
   "messageType": "chatMessage"
 }
-```
+````
 
 ## Objectifs du Workflow n8N
 
@@ -72,6 +72,7 @@ Je veux un workflow n8N qui :
 ## Format de Sortie
 
 Le workflow doit :
+
 - Retourner une réponse JSON au webhook avec le statut
 - Gérer les erreurs gracieusement
 - Logger toutes les actions
@@ -95,6 +96,7 @@ Le workflow doit :
 ## Instructions
 
 Crée-moi un workflow n8N complet avec :
+
 - Tous les nœuds nécessaires
 - Les connexions entre les nœuds
 - Les configurations de chaque nœud
@@ -105,10 +107,12 @@ Crée-moi un workflow n8N complet avec :
 Le workflow doit être prêt à être importé dans n8N et fonctionnel après configuration des credentials.
 
 Format de sortie souhaité :
+
 - Fichier JSON du workflow n8N
 - Documentation d'installation
 - Guide de configuration des credentials
 - Exemples de personnalisation
+
 ```
 
 ---
@@ -136,12 +140,14 @@ Vous pouvez modifier le prompt pour :
 Si vous voulez ajouter l'analyse IA, ajoutez dans le prompt :
 
 ```
+
 7. **Analyse IA** (optionnel) :
    - Envoie la transcription à OpenAI/Anthropic pour :
      - Résumé automatique
      - Extraction d'entités nommées
      - Classification par catégorie
      - Traduction si nécessaire
+
 ```
 
 ## Notes
@@ -150,3 +156,4 @@ Si vous voulez ajouter l'analyse IA, ajoutez dans le prompt :
 - Tous les nœuds utiliseront les dernières versions disponibles
 - Les credentials devront être configurés manuellement dans n8N
 - Les variables d'environnement doivent être définies dans n8N
+```

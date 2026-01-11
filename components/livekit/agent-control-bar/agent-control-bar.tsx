@@ -2,13 +2,18 @@
 
 import { type HTMLAttributes, useCallback, useState } from 'react';
 import { Track } from 'livekit-client';
-import { useChat, useRemoteParticipants, type ReceivedMessage } from '@livekit/components-react';
-import { ChatTextIcon, PhoneDisconnectIcon, CopyIcon, CheckIcon } from '@phosphor-icons/react/dist/ssr';
 import { toast } from 'sonner';
+import { type ReceivedMessage, useChat, useRemoteParticipants } from '@livekit/components-react';
+import {
+  ChatTextIcon,
+  CheckIcon,
+  CopyIcon,
+  PhoneDisconnectIcon,
+} from '@phosphor-icons/react/dist/ssr';
 import { TrackToggle } from '@/components/livekit/agent-control-bar/track-toggle';
 import { Button } from '@/components/livekit/button';
 import { Toggle } from '@/components/livekit/toggle';
-import { cn, formatMessagesAsText, copyToClipboard } from '@/lib/utils';
+import { cn, copyToClipboard, formatMessagesAsText } from '@/lib/utils';
 import { ChatInput } from './chat-input';
 import { UseInputControlsProps, useInputControls } from './hooks/use-input-controls';
 import { usePublishPermissions } from './hooks/use-publish-permissions';
@@ -83,13 +88,15 @@ export function AgentControlBar({
       await copyToClipboard(formattedText);
       setCopySuccess(true);
       toast.success('Transcription copiée dans le presse-papiers !');
-      
+
       // Reset success state after 2 seconds
       setTimeout(() => {
         setCopySuccess(false);
       }, 2000);
     } catch (error) {
-      toast.error(`Erreur lors de la copie: ${error instanceof Error ? error.message : String(error)}`);
+      toast.error(
+        `Erreur lors de la copie: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }, [messages]);
 
@@ -186,11 +193,7 @@ export function AgentControlBar({
               onClick={handleCopyTranscript}
               title="Copier la transcription dans le presse-papiers"
             >
-              {copySuccess ? (
-                <CheckIcon weight="bold" />
-              ) : (
-                <CopyIcon weight="bold" />
-              )}
+              {copySuccess ? <CheckIcon weight="bold" /> : <CopyIcon weight="bold" />}
             </Button>
           )}
         </div>

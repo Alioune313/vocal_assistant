@@ -30,7 +30,7 @@ function createWindow() {
   if (isDev) {
     // In development, connect to Next.js dev server
     mainWindow.loadURL('http://localhost:3000');
-    
+
     // Open DevTools in development
     mainWindow.webContents.openDevTools();
   } else {
@@ -53,16 +53,14 @@ function startNextServer() {
   return new Promise((resolve, reject) => {
     // In production, start the Next.js server
     // In packaged app, files are in resources/app.asar or resources/app
-    const appPath = app.isPackaged 
-      ? process.resourcesPath 
-      : app.getAppPath();
-    
+    const appPath = app.isPackaged ? process.resourcesPath : app.getAppPath();
+
     const nextPath = app.isPackaged
       ? join(appPath, 'app', '.next', 'standalone')
       : join(appPath, '.next', 'standalone');
-    
+
     const serverPath = join(nextPath, 'server.js');
-    
+
     // Check if server file exists
     const fs = require('fs');
     if (!fs.existsSync(serverPath)) {
@@ -70,7 +68,7 @@ function startNextServer() {
       reject(new Error('Next.js server not found'));
       return;
     }
-    
+
     nextServer = spawn('node', [serverPath], {
       cwd: nextPath,
       env: {
@@ -116,11 +114,14 @@ app.whenReady().then(async () => {
   } catch (err) {
     console.error('Error starting Next.js server:', err);
   }
-  
+
   // Wait a bit for the server to start
-  setTimeout(() => {
-    createWindow();
-  }, isDev ? 1000 : 2000);
+  setTimeout(
+    () => {
+      createWindow();
+    },
+    isDev ? 1000 : 2000
+  );
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -133,7 +134,7 @@ app.on('window-all-closed', () => {
   if (nextServer) {
     nextServer.kill();
   }
-  
+
   if (process.platform !== 'darwin') {
     app.quit();
   }

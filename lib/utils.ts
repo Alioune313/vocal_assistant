@@ -108,12 +108,12 @@ export function getSandboxTokenSource(appConfig: AppConfig) {
     if (!endpoint || endpoint.trim() === '') {
       throw new Error('NEXT_PUBLIC_CONN_DETAILS_ENDPOINT is not defined or is empty');
     }
-    
+
     // Validate that we're in a browser environment
     if (typeof window === 'undefined' || !window.location) {
       throw new Error('window.location is not available');
     }
-    
+
     // Try to construct the URL with proper error handling
     let url: URL;
     try {
@@ -129,7 +129,9 @@ export function getSandboxTokenSource(appConfig: AppConfig) {
         url = new URL(endpoint, baseUrl);
       }
     } catch (error) {
-      throw new Error(`Invalid URL: ${endpoint} (base: ${window.location.origin}). ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Invalid URL: ${endpoint} (base: ${window.location.origin}). ${error instanceof Error ? error.message : String(error)}`
+      );
     }
     const sandboxId = appConfig.sandboxId ?? '';
     const roomConfig = appConfig.agentName
@@ -169,39 +171,43 @@ export function formatMessagesAsText(messages: ReceivedMessage[]): string {
 
   const locale = navigator?.language ?? 'fr-FR';
   const lines: string[] = [];
-  
+
   lines.push('=== TRANSCRIPTION DE LA SESSION ===\n');
-  lines.push(`Date: ${new Date().toLocaleDateString(locale, { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  })}`);
-  lines.push(`Heure de début: ${new Date(messages[0]?.timestamp ?? Date.now()).toLocaleTimeString(locale)}`);
-  lines.push(`Heure de fin: ${new Date(messages[messages.length - 1]?.timestamp ?? Date.now()).toLocaleTimeString(locale)}`);
+  lines.push(
+    `Date: ${new Date().toLocaleDateString(locale, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })}`
+  );
+  lines.push(
+    `Heure de début: ${new Date(messages[0]?.timestamp ?? Date.now()).toLocaleTimeString(locale)}`
+  );
+  lines.push(
+    `Heure de fin: ${new Date(messages[messages.length - 1]?.timestamp ?? Date.now()).toLocaleTimeString(locale)}`
+  );
   lines.push('\n--- Messages ---\n');
 
   messages.forEach((msg) => {
     const time = new Date(msg.timestamp);
-    const timeStr = time.toLocaleTimeString(locale, { 
-      hour: '2-digit', 
+    const timeStr = time.toLocaleTimeString(locale, {
+      hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
     });
-    
-    const sender = msg.from?.isLocal 
-      ? 'Vous' 
-      : (msg.from?.name || 'Agent');
-    
+
+    const sender = msg.from?.isLocal ? 'Vous' : msg.from?.name || 'Agent';
+
     const messageText = msg.message || '';
-    
+
     lines.push(`[${timeStr}] ${sender}:`);
     lines.push(messageText);
     lines.push(''); // Ligne vide entre les messages
   });
 
   lines.push('\n=== Fin de la transcription ===');
-  
+
   return lines.join('\n');
 }
 
@@ -224,7 +230,7 @@ export async function copyToClipboard(text: string): Promise<void> {
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-      
+
       try {
         document.execCommand('copy');
       } finally {
@@ -232,6 +238,8 @@ export async function copyToClipboard(text: string): Promise<void> {
       }
     }
   } catch (error) {
-    throw new Error(`Impossible de copier dans le presse-papiers: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Impossible de copier dans le presse-papiers: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }

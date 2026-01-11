@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TokenSource } from 'livekit-client';
 import {
   RoomAudioRenderer,
@@ -29,7 +29,13 @@ interface AppProps {
 }
 
 // Internal component that uses the session - this ensures hooks are called consistently
-function AppContent({ tokenSource, appConfig }: { tokenSource: TokenSource; appConfig: AppConfig }) {
+function AppContent({
+  tokenSource,
+  appConfig,
+}: {
+  tokenSource: ReturnType<typeof TokenSource.endpoint> | ReturnType<typeof getSandboxTokenSource>;
+  appConfig: AppConfig;
+}) {
   const session = useSession(
     tokenSource,
     appConfig.agentName ? { agentName: appConfig.agentName } : undefined
@@ -50,7 +56,9 @@ function AppContent({ tokenSource, appConfig }: { tokenSource: TokenSource; appC
 
 export function App({ appConfig }: AppProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const [tokenSource, setTokenSource] = useState<TokenSource | null>(null);
+  const [tokenSource, setTokenSource] = useState<
+    ReturnType<typeof TokenSource.endpoint> | ReturnType<typeof getSandboxTokenSource> | null
+  >(null);
 
   // Wait for client-side mounting
   useEffect(() => {
@@ -66,21 +74,19 @@ export function App({ appConfig }: AppProps) {
       console.error('Cannot create token source: window.location is not available');
       return;
     }
-    
+
     const origin = window.location.origin;
     if (!origin || origin === 'null' || origin === 'undefined' || origin.trim() === '') {
       console.error(`Cannot create token source: window.location.origin is invalid: "${origin}"`);
       return;
     }
-    
+
     // Only use sandbox token source if endpoint is properly defined
     const endpoint = process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT;
-    const hasValidEndpoint = 
-      typeof endpoint === 'string' && 
-      endpoint.trim() !== '';
-    
-    let source: TokenSource;
-    
+    const hasValidEndpoint = typeof endpoint === 'string' && endpoint.trim() !== '';
+
+    let source: ReturnType<typeof TokenSource.endpoint> | ReturnType<typeof getSandboxTokenSource>;
+
     try {
       if (hasValidEndpoint) {
         try {
@@ -94,7 +100,7 @@ export function App({ appConfig }: AppProps) {
         // Default to local endpoint
         source = TokenSource.endpoint('/api/connection-details');
       }
-      
+
       setTokenSource(source);
     } catch (error) {
       console.error('Error creating token source:', error);

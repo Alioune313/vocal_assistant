@@ -28,6 +28,7 @@ N8N_WEBHOOK_URL=https://votre-n8n.com/webhook/transcription-webhook
 ### 3. Configuration des Credentials
 
 Configurez les credentials suivants dans n8N :
+
 - Microsoft Outlook (pour emails)
 - Google Drive (pour sauvegarde)
 - Google Sheets (pour logging)
@@ -57,12 +58,14 @@ Le workflow n8N effectue automatiquement :
 ## 📊 Utilisation dans l'Application
 
 Dans le widget de transcription, vous verrez maintenant :
+
 - Bouton "Copier" - Copie dans le presse-papiers
 - Bouton "Envoyer à n8N" - Envoie vers n8N pour traitement automatique
 
 ## 🔧 Personnalisation
 
 Vous pouvez modifier le workflow n8N pour :
+
 - Ajouter d'autres destinations (Slack, Teams, etc.)
 - Modifier l'analyse (IA, NLP, etc.)
 - Changer les templates d'email
@@ -71,16 +74,19 @@ Vous pouvez modifier le workflow n8N pour :
 ## 📝 Exemples de Cas d'Usage
 
 ### Support Client
+
 - Transcription → Email au support
 - Analyse → Création de ticket si urgent
 - Sauvegarde → CRM
 
 ### Réunions
+
 - Transcription → Google Drive (Word)
 - Analyse → Extraction des actions
 - Notification → Email avec résumé
 
 ### Documentation
+
 - Transcription → Notion
 - Formatage → Template personnalisé
 - Archivage → Google Drive organisé
